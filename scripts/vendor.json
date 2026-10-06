@@ -1,0 +1,21 @@
+{
+  "_comment": "Third-party code the extension bundles, pinned by version and SHA-256. scripts/build.mjs downloads each archive, refuses it if the hash differs, and copies only the files listed. Checked 2026-10-06: the npm tarballs match the registry's SHA-512 integrity; the PDF.js zip's build/pdf.mjs and pdf.worker.mjs are byte-identical to pdfjs-dist 4.10.38 from npm; KaTeX and html2canvas files are byte-identical to the copies bundled before. To update one, see DESIGN.md \"Updating PDF.js\" (the same steps apply to KaTeX and html2canvas).",
+  "pdfjs": {
+    "version": "4.10.38",
+    "license": "Apache-2.0",
+    "url": "https://github.com/mozilla/pdf.js/releases/download/v4.10.38/pdfjs-4.10.38-dist.zip",
+    "sha256": "32bdd9c5198b77dbaa8f02de81f34476888b3abdd64b9fb5f607f81f01487e6a"
+  },
+  "katex": {
+    "version": "0.17.0",
+    "license": "MIT",
+    "url": "https://registry.npmjs.org/katex/-/katex-0.17.0.tgz",
+    "sha256": "252efd48f892d178136fe3ba3530d3718b2b087ea81c3a40a877227bc61d5256"
+  },
+  "html2canvas": {
+    "version": "1.4.1",
+    "license": "MIT",
+    "url": "https://registry.npmjs.org/html2canvas/-/html2canvas-1.4.1.tgz",
+    "sha256": "542536a762933dadf7605b275ae096a31734ab3cf488069b7d75523c309f5b12"
+  }
+}

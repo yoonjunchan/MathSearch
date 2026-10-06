@@ -1,0 +1,32 @@
+<!--
+  viewer-snippet.html — NOT a standalone page.
+
+  Paste this block into your PDF.js fork's built viewer page, at
+      lib/pdfjs/web/viewer.html
+  immediately BEFORE the closing </body> tag.
+
+  Paths below are relative to lib/pdfjs/web/, where viewer.html lives:
+
+      lib/pdfjs/web/viewer.html      <- this file gets the snippet
+      lib/katex/...                  <- ../../katex/
+      lib/html2canvas/...            <- ../../html2canvas/
+      src/controller.js              <- ../../../src/controller.js
+-->
+
+<!-- ═══ MathSearch (LaTeX Math Symbol Search) ═══════════════════════════════════════ -->
+
+<!-- KaTeX: stylesheet (fonts load from lib/katex/fonts/ via this CSS) -->
+<link rel="stylesheet" href="../../katex/katex.min.css">
+
+<!-- KaTeX + html2canvas: classic scripts that define window.katex and
+     window.html2canvas, which panel.js expects to find. -->
+<script src="../../katex/katex.min.js"></script>
+<script src="../../html2canvas/html2canvas.min.js"></script>
+
+<!-- The extension itself. controller.js is an ES module that imports the
+     other modules (panel, template, pageindex, segmentation, matching,
+     overlay, config) and bootstraps on the PDF.js `webviewerloaded` event
+     (or immediately, if PDFViewerApplication already exists). -->
+<script type="module" src="../../../src/controller.js"></script>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->

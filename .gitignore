@@ -1,0 +1,5 @@
+node_modules/
+vendor-cache/
+dist/
+lib/
+guide/build/

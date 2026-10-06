@@ -1,0 +1,275 @@
+% MathSearch — guide and test sheet.
+%
+% The document the viewer opens by default (lib/pdfjs/web/mathsearch-guide.pdf,
+% built by `npm run guide`). It explains the extension and doubles as a test
+% sheet: every formula and statement in it is made up for this purpose, so
+% it can be shipped with the extension.
+%
+% It is laid out to exercise the features:
+%   - roman-numbered front matter, so printed page 1 is PDF page 3
+%     ("Look up in index" must map printed -> PDF pages);
+%   - hyperref bookmarks and page labels;
+%   - an index of notation at the end whose page numbers come from \pageref,
+%     so they stay correct when the text changes;
+%   - lookalike symbols (\mathfrak{F}, \mathscr{F}, \mathcal{F}, F) and
+%     symbols with and without sub/superscripts.
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,mathrsfs}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\key}[1]{\fbox{\small\ttfamily #1}}
+\newcommand{\cmd}[1]{\texttt{\textbackslash #1}}
+
+\begin{document}
+
+% ── Front matter (roman page numbers) ───────────────────────────────────────
+\pagenumbering{roman}
+\begin{center}
+  \vspace*{2cm}
+  {\LARGE\bfseries MathSearch}\\[4pt]
+  {\large Search a PDF for mathematical symbols by how they look}\\[18pt]
+  {\large Guide and test sheet}\\[6pt]
+  Version 1.0
+\end{center}
+\vspace{1.5cm}
+\noindent This document opens when the MathSearch viewer starts. It explains
+how to use the extension and is also a practice sheet: the formulas in it
+exist only so that there is something to search for. They are made up and
+state nothing of mathematical interest.
+
+\medskip\noindent To search your own PDF, open it with the viewer's
+\textbf{Open} button (in the \textbf{Tools} menu at the top right) or press
+\key{Ctrl+O}, or drag the file onto the viewer. To read several PDFs at once, click the MathSearch toolbar
+icon again: each click opens a new viewer tab with its own search.
+\newpage
+\tableofcontents
+\newpage
+
+% ── Main text (arabic page numbers) ─────────────────────────────────────────
+\pagenumbering{arabic}
+
+\section{Getting started}
+
+The MathSearch panel floats over the page, at the top right when the viewer
+opens. Drag it by its header to move it out of the way, and double-click the
+header to put it back. The \textbf{$\blacktriangledown$} button collapses it
+and \textbf{$\times$} hides it. The \textbf{$\Sigma$} button in the viewer's
+toolbar, or \key{Alt+M}, brings it back.
+
+\begin{enumerate}
+  \item Type the symbol as LaTeX in the box, for example
+        \verb|\mathfrak{F}|. The preview underneath shows it as it will be
+        searched for: what you see is the search template.
+  \item Press \key{Enter} or click \textbf{Search}. Every place in the
+        document where the symbol \emph{looks} the same is highlighted in
+        yellow, and the current match in orange, each with its score.
+  \item Press \key{Enter} again to go to the next match and
+        \key{Shift+Enter} to go back, or click an entry in the list.
+\end{enumerate}
+
+\subsection*{Searching by snip}
+If you don't know a symbol's LaTeX, click the scissors button next to the
+box (or press \key{Alt+S}) and drag a rectangle around the symbol on the
+page. The snip replaces the preview and is searched for straight away. It
+stays the query until you type in the box again. Snip only the symbol:
+anything else inside the rectangle, such as a subscript, a fraction bar or
+the edge of a neighbouring letter, is searched for too and lowers the scores
+of clean matches. \key{Esc} cancels a snip.
+
+\subsection*{Keyboard shortcuts}
+\begin{center}
+\begin{tabular}{ll}
+  \key{Alt+M}        & show the panel and put the cursor in the search box \\
+  \key{Enter}        & search; once there are results, next match \\
+  \key{Shift+Enter}  & previous match \\
+  \key{Ctrl+Enter}   & look the symbol up in the book's index first \\
+  \key{Alt+S}        & snip a symbol from the page and search for it \\
+  \key{Esc}          & leave the search box \\
+  double-click header & move the panel back to the top right \\
+\end{tabular}
+\end{center}
+
+\subsection*{Settings in the panel}
+\textbf{Scope} searches the whole document or only the current page.
+\textbf{Min score} (0.90 by default) hides weaker matches. Lowering it after
+a search shows more candidates at once, without searching again. This helps
+with small occurrences, such as a symbol inside a subscript.
+\textbf{Penalise scripts and accents next to the match} (on by default)
+makes a symbol that carries an extra sub- or superscript, accent or dot rank
+below the bare symbol (see Section~\ref{sec:search}). Untick it to find the
+symbol with or without them; the search runs again, because the scores
+change. The setting lasts until you close the viewer.
+
+\subsection*{Memory settings}
+Open \textbf{Settings} at the bottom of the panel. These two are kept in your
+browser between sessions; nothing else is stored.
+\textbf{Memory for the page index} (250\,MB by default, at least 50) limits
+how much memory the extension keeps for pages it has already prepared for
+searching. A page of text takes about 0.16\,MB, so most books fit. In a
+longer book, the extension keeps the book's index and list of notation and
+the pages around where your last search started, half before and half
+after; other pages are prepared again when a search reaches them, which is
+slower but finds the same matches. The line under the setting shows how much
+is in use.
+\textbf{Release it when the tab is hidden for} (30\,minutes by default;
+also 10\,minutes, 1 or 2 hours, or never) gives the memory back while you
+work in another tab. It is prepared again when you come back.
+
+\section{How the search works}\label{sec:search}
+
+MathSearch does not read the text of the PDF: it compares shapes. Each page
+is rendered as an image, and the symbol from the preview is looked for in
+it, at any size. This finds symbols that have no text form in the PDF, and
+it tells apart letters that text search treats as the same, such as
+$\mathfrak{F}$, $\mathscr{F}$, $\mathcal{F}$ and $F$.
+
+\medskip\noindent\textbf{Search order.} The search starts at the page you are
+reading and goes backward to the first page, then forward from where you
+started to the end. A symbol is usually defined before it is used, so the
+nearest earlier occurrence, often its definition, is found first. The viewer
+jumps to the first match as soon as it is found, and the rest appear while
+the search continues. \textbf{Cancel} stops it and keeps what was found.
+
+\medskip\noindent\textbf{How long it takes.} After a book is opened, its pages
+are prepared in the background (``Indexing pages 3/24 \dots''); a search
+does not wait for that, but goes faster once it is done. A search through a
+whole prepared book takes a few hundredths of a second per page, longer for
+larger or compound symbols: in a 1100-page textbook on a laptop, about 40\,s
+for $\mathscr{X}$ and about 90\,s for a snip of $L(H)$. Pages beyond the
+memory limit (see \emph{Memory settings}) are prepared again during the
+search, which adds to that: the same $\mathscr{X}$ search took about 70\,s
+with the limit set to 50\,MB. Because the search starts at your page, the
+nearest occurrence usually shows up within seconds, long before the search
+ends.
+
+\medskip\noindent\textbf{Sub- and superscripts count.} Searching for
+$\mathbb{R}$ ranks $\mathbb{R}^d$ and $\hat{R}$ below a bare $\mathbb{R}$,
+because the extra marks on the page are not part of what you asked for.
+To find $\mathbb{R}^d$ itself, type \verb|\mathbb{R}^d|; to find
+$\mathbb{R}$ with or without marks, untick \textbf{Penalise scripts and
+accents}. Punctuation is not a script: in ``take $x$, then'' the comma sits
+where a subscript would, but it is recognised by its shape and $x$ scores as
+if it stood alone.
+
+\section{Looking a symbol up in the index}\label{sec:lookup}
+
+Many books have an index of notation that says where each symbol is
+introduced. \textbf{Look up in index} (or \key{Ctrl+Enter}) uses it:
+\begin{enumerate}
+  \item It finds the index through the PDF's bookmarks, or by its heading:
+        a list of notation or symbols near the start of the book (for
+        example right after the contents), an index on one of the last
+        pages, or both.
+  \item It searches the index for the symbol and reads the page number
+        printed next to it.
+  \item It jumps to that page and searches from there.
+\end{enumerate}
+The printed page number is usually not the PDF page number, because front
+matter comes first. In this document, printed page~1 is PDF page~3. The
+panel shows where the index pointed, for example
+``Index $\to$ p.\,3''. An ``$\approx$'' after a page means the PDF page
+could not be confirmed and is an estimate.
+
+This document has an index of notation on page~\pageref{sec:notation}. Try
+it: type \verb|\mathfrak{F}| and press \key{Ctrl+Enter}.
+
+\section{Practice text}\label{sec:practice}
+
+The following text is made up. It uses each symbol in the index of notation
+several times, in the ways they appear in real papers.
+
+\subsection*{A toy filtration}
+\textbf{Definition 1.}\label{def:frak} A \emph{toy filtration} is a family
+$\mathfrak{F} = (\mathfrak{F}_n)_{n \ge 0}$ of finite sets with
+$\mathfrak{F}_n \subseteq \mathfrak{F}_{n+1}$ for every $n$. We write
+$\mathscr{F}$ for the union of all $\mathfrak{F}_n$.\label{def:scr}
+
+\medskip\noindent\textbf{Definition 2.}\label{def:cal} For a toy filtration
+$\mathfrak{F}$, let $\mathcal{F}$ be the collection of subsets of
+$\mathscr{F}$ that meet only finitely many of the sets
+$\mathfrak{F}_{n+1} \setminus \mathfrak{F}_n$.
+
+\medskip\noindent\textbf{Definition 3.}\label{def:tau} A \emph{stopping
+index} is a sequence $\tau_1 \le \tau_2 \le \cdots$ of natural numbers. We
+write $\tau_j$ for its $j$-th term and $\mathscr{F}_{\tau_{j+1}}$ for the
+set $\mathfrak{F}_{\tau_{j+1}}$ seen as a subset of $\mathscr{F}$.
+
+\subsection*{Lookalikes}
+The four letters $\mathfrak{F}$, $\mathscr{F}$, $\mathcal{F}$ and $F$ are
+different symbols, and a search for one should not report the others.
+The same goes for $\mathbb{R}$ and $R$.
+
+\newpage
+\subsection*{Spaces and classes}
+\textbf{Definition 4.}\label{def:R} We write $\mathbb{R}$ for the real line
+and $\mathbb{R}^d$ for $d$-dimensional space. A map
+$f \colon \mathbb{R}^d \to \mathbb{R}$ is \emph{toy-smooth} if it is
+constant on each set of $\mathcal{F}$.
+
+\medskip\noindent\textbf{Definition 5.}\label{def:ID} Let
+$\mathrm{ID}(\mathbb{R}^d)$ be the class of toy-smooth maps, and
+$\mathrm{ID}_2(\mathbb{R}^d)$ those that also vanish outside a bounded set.
+
+\medskip\noindent\textbf{Remark.} Small occurrences are harder to find:
+in $\mathscr{F}_{\tau_j}$ the $\tau$ is in script size, and in
+$e^{\mathfrak{F}}$ the $\mathfrak{F}$ is. Lower \textbf{Min score} to about
+0.85 to see them.
+
+\subsection*{Exercises}
+Search for each of the following. The first page each one appears on is
+given, so you can check that the search order and the index lookup take you
+there.
+\begin{center}
+\begin{tabular}{lll}
+  type & first defined & notes \\ \hline
+  \verb|\mathfrak{F}| & p.\,\pageref{def:frak} & also in Section~\ref{sec:search} \\
+  \verb|\mathscr{F}|  & p.\,\pageref{def:scr}  & should not match $\mathfrak{F}$ or $\mathcal{F}$ \\
+  \verb|\mathcal{F}|  & p.\,\pageref{def:cal}  & \\
+  \verb|\mathbb{R}^d| & p.\,\pageref{def:R}    & a bare $\mathbb{R}$ ranks lower \\
+  \verb|\mathrm{ID}|  & p.\,\pageref{def:ID}   & also matches ``ID'' in IDEA, see Limitations \\
+  \verb|\tau_j|       & p.\,\pageref{def:tau}  & also in script size \\
+\end{tabular}
+\end{center}
+
+\section{Limitations}
+\begin{itemize}
+  \item Scanned books work for the visual search. Their page numbers
+        cannot be read for \textbf{Look up in index}, because a scan has no
+        text layer.
+  \item Content printed sideways (a table turned on its side) is found
+        when the PDF has a text layer: the search then also tries the symbol
+        turned the same way. In a scanned book it is not found. Rotating the
+        view in the viewer is fine.
+  \item Very small symbols (below about 6 pixels high at the search
+        resolution) are skipped: at that size all shapes look alike.
+  \item Everything happens in your browser: no page or query leaves your
+        computer.
+  \item A symbol that looks the same as ordinary letters is found in running 
+      text too: $\mathrm{ID}$ also matches the ``ID'' in IDEA, because the
+      search compares shapes only.
+  \item Commas and semicolons are told apart from subscripts by their shape,
+      tuned on the font of this guide. In another font, a comma right after
+      a symbol, as in ``$x$, $y$'', may still be taken for a subscript and
+      push the symbol below \textbf{Min score}. If a symbol you can see is
+      not found, untick \textbf{Penalise scripts and accents}.
+\end{itemize}
+
+% ── Index of notation ───────────────────────────────────────────────────────
+\newpage
+\phantomsection\label{sec:notation}
+\addcontentsline{toc}{section}{Index of Notation}
+\section*{Index of Notation}
+\noindent
+\begin{tabular}{@{}p{0.44\textwidth}@{\hspace{0.12\textwidth}}p{0.44\textwidth}@{}}
+$\mathfrak{F}$ \dotfill toy filtration, \pageref{def:frak} &
+$\mathbb{R}$ \dotfill real line, \pageref{def:R} \\
+$\mathscr{F}$ \dotfill union of a filtration, \pageref{def:scr} &
+$\mathbb{R}^d$ \dotfill $d$-dimensional space, \pageref{def:R} \\
+$\mathcal{F}$ \dotfill finite-meeting sets, \pageref{def:cal} &
+$\mathrm{ID}$ \dotfill toy-smooth maps, \pageref{def:ID} \\
+$\tau_j$ \dotfill stopping index, \pageref{def:tau} &
+$\mathrm{ID}_2$ \dotfill bounded toy-smooth maps, \pageref{def:ID} \\
+\end{tabular}
+
+\end{document}

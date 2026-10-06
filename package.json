@@ -1,0 +1,17 @@
+{
+  "name": "mathsearch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chrome/Edge extension: search a PDF for math symbols by how they look.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/build.mjs setup",
+    "build": "node scripts/build.mjs dist",
+    "check-viewer": "node scripts/check-viewer.mjs",
+    "guide": "node guide/build.mjs"
+  },
+  "devDependencies": {
+    "fflate": "^0.8.3"
+  }
+}
