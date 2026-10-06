@@ -2,8 +2,7 @@
 
 The detailed companion to [README.md](README.md), which is only the
 introduction and quick start. This document covers the folder layout, the
-full setup, every panel feature, how the search works, configuration, the
-test bench, calibration, known limitations and the design history.
+full setup, every panel feature, how the search works, configuration and known limitations.
 
 ## Contents
 
@@ -12,10 +11,7 @@ test bench, calibration, known limitations and the design history.
 - [Using it (full reference)](#using-it-full-reference)
 - [How it works](#how-it-works)
 - [Configuration](#configuration)
-- [Test bench](#test-bench)
-- [Calibration and score bands](#calibration-and-score-bands)
 - [Known limitations](#known-limitations)
-- [Design history](#design-history)
 
 ---
 
@@ -139,10 +135,6 @@ patched by hand.
    `pagerendered` and `documentloaded`, `pdfViewer.getPageView(i).div` and
    `.pdfPage.view`, `pdfViewer.scrollPageIntoView`, and
    `pdfDocument.getPage(n).render(…)`.
-5. **Bench:** `npm test` and `npm run smoke` use the separate `pdfjs-dist`
-   npm package (`package.json`; 6.3.289 at the time of writing), not
-   `lib/pdfjs`. Keeping the two on the same major version makes bench and
-   browser rasterise pages the same way.
 
 ---
 
@@ -171,8 +163,7 @@ which needs no permission and never leaves the browser.
   the template, and clean occurrences then score lower. A line under the
   preview says so.
 - **Scope**: *whole document* (default) or *this page*.
-- **Min score**: matches below this are hidden. Default 0.90 (see
-  [Calibration](#calibration-and-score-bands)). Changing it after a search
+- **Min score**: matches below this are hidden. Default 0.90. Changing it after a search
   re-filters instantly without re-scanning — lower it to surface weaker
   candidates such as scriptsize occurrences of compound symbols.
 - **Penalise scripts and accents next to the match** (on by default,
@@ -268,7 +259,7 @@ memory cap with the retention rule under *Settings* above; `get()` expands
 it, and the expanded page with its distance transform is kept for the last
 six pages. Nothing is cut into word boxes: a component's bounding box is
 intrinsic to its glyph, which is what made the earlier projection-profile
-segmentation unreliable (see [Design history](#design-history)).
+segmentation unreliable.
 
 **2. Template** (`template.js`, `matching.js: prepareTemplate`). The KaTeX
 preview is rasterised by html2canvas at 3× (`TEMPLATE_RENDER_SCALE`),
@@ -317,6 +308,20 @@ reading order.
 The controller keeps every match down to a score of 0.5 and applies the
 panel's threshold at display time.
 
+**Rotated pages.** Pages are indexed as PDF.js renders them with their own
+`/Rotate`, so landscape pages and `pdflscape` pages work as they are. The
+viewer's own rotation (Rotate clockwise) is applied to the highlights, the
+scroll target and snips (`rotateBox` in `overlay.js`). Content typeset
+sideways on the page (`lscape`, `\rotatebox`, a turned table) is found
+through the text layer: while a page is indexed, the share of its text
+running in each quarter turn is read (`textQuarterTurns` in
+`bookindex.js`, ≈ 5–12 ms a page), and a turn with at least
+`ROTATED_TEXT_MIN_CHARS` characters and `ROTATED_TEXT_MIN_SHARE` of the
+page is also searched with the template turned that way
+(`Matching.rotateTemplate`; a quarter turn of a binary image is exact, so
+the scores are those of upright matches). A scanned page has no text layer
+and is searched upright only.
+
 ---
 
 ## Configuration
@@ -344,139 +349,6 @@ the sweep.
 
 ---
 
-## Test bench
-
-The test bench is kept in the maintainer's development repository and is not part of this one.
-
-`test/` is a Node bench that replaces guessing with numbers. It needs
-`pdflatex` (TeX Live or MiKTeX) on the PATH and `npm install` (pdfjs-dist,
-@napi-rs/canvas, katex).
-
-The LaTeX packages the bench and the guide use are listed in
-`tex-packages.txt`, with the files each one provides. Installing them
-beforehand avoids the first two problems below. TeX Live:
-`tlmgr install $(sed 's/#.*//' tex-packages.txt)`; MiKTeX: install them
-from MiKTeX Console → Packages.
-
-Things that can go wrong with the TeX installation (all have happened):
-- **The bench seems to hang.** If a package is missing, MiKTeX may open a
-  "Package Installation" dialog and wait for a click. The bench runs
-  `pdflatex -interaction=batchmode`, which stops TeX's own prompts but not
-  this dialog, and it may be hidden behind other windows: `pdflatex` then
-  sits at 0 % CPU. Answer the dialog (or install the packages from
-  `tex-packages.txt` first) and the run continues.
-- **`Package keyval Error: artifact undefined`** (or a similar error from a
-  package the bench does not load directly). An on-the-fly install fetches
-  the newest version of the missing package but leaves the others as they
-  are, and a new package may need newer ones: `pdfpages` 2026/03 (used by
-  `test/fixtures/long.tex`) passes an `artifact` key that `graphicx` 2021
-  does not know. Update the whole installation: MiKTeX Console → Updates →
-  "Update now", or `tlmgr update --all`.
-- **Compiled fixtures are cached** in `test/build/` and rebuilt only when
-  their `.tex` is newer, so a TeX update does not reach the bench by itself.
-  Delete `test/build/` and rerun `npm test` (a few minutes: `page.tex` is
-  compiled once per tag) to check the bench against the new installation.
-- A fresh checkout or worktree has no `test/build/`, so its first `npm test`
-  takes those few minutes too.
-
-- `test/fixtures/page.tex` is a realistic page of mathematics. **Every**
-  occurrence of a queried symbol is tagged `\T{n}{…}`; compiling with
-  `\def\gttag{n}` typesets occurrence *n* in red without changing the layout,
-  and the bench reads its bounding box off the rasterised page. Anything
-  untagged that scores is a genuine distractor.
-- Pages are rasterised by PDF.js exactly as the extension does. Single-glyph
-  templates are drawn from the bundled KaTeX TTFs at 60 px (what html2canvas
-  produces from the 18 px preview at 3×); compound templates are typeset by
-  LaTeX at a non-integer scale so that the matcher must downscale them.
-- `test/queries.mjs` classifies each tag per query: `exact` (must be found),
-  `partial` (extra script/accent attached — either side of the threshold),
-  `negative` (a different compound on the same base), `text` (same letters in
-  running text) and `small` (scriptsize occurrence of a compound); the last
-  four are reported, not graded.
-- Queries named `snip …` (`crop: n`) take their template from the fixture
-  itself: the ground-truth box of tag *n* plus 2 px, cut from the page
-  rendered at `RENDER_SCALE × SNIP_RENDER_FACTOR`, as the ✂ Snip button does.
-
-```
-npm test                  # separation table; exit 1 on a miss or a false positive
-npm run test:verbose      # per-occurrence score / forward / reverse / scale / window
-npm run test:png          # annotated page PNGs in test/build/
-npm run fp-curve          # distractor counts per threshold, per query
-npm run sweep -- --grid '{"TOLERANCE_MIN_PX":[1.5,2],"TOLERANCE_RATIO":[0.1]}'
-npm run smoke             # PageIndex through pdfjs-dist (fake DOM) + the whole UI under jsdom
-npm run match-dump -- --out FILE   # every match of every query on several fixtures, as JSON
-node --expose-gc test/index-speed.mjs --pdf FILE --json OUT   # per-stage indexing / search cost on any PDF
-node test/index-speed.mjs --compare A.json B.json             # … and the difference between two versions
-```
-
-`match-dump` is for matcher changes meant to be pure speed-ups: dump before
-and after and `cmp` the two files (it serves pages through the page index's
-compact form, as the extension does). `index-speed` times render, binarise,
-segment, store, load, distance transform and one query per page, then the
-real `PageIndex` path (pre-index, warm whole-document search, memory); it
-runs on any PDF, so large books can be compared on two checkouts without
-adding them to the repository.
-
-Debugging helpers: `test/debug-crop.mjs` (magnified page crops next to the
-template), `test/debug-overlay.mjs` (template drawn over a page window at a
-given scale/offset with its score), `test/debug-score.mjs` (score one
-placement and list attached ink).
-
-Current table (threshold 0.90, page 1836×2376 px, 1439 components;
-segmentation 80 ms, distance transform 80 ms, 10–270 ms per query):
-
-```
-query                      exact         small         partial       negative      text        distractor
-\mathscr{F}                0.907–0.921                 0.918–0.930                             0.830
-\mathfrak{F}               0.942–0.964                                                         0.784
-\mathbb{R}                 0.926–0.972                 0.826–0.956                             0.840
-\mathrm{ID}                0.951–0.984                 0.922–0.934                 0.977       0.886
-\mathcal{F}                0.944–0.960                 0.943                                   0.780
-x                          0.921–0.927                 0.785–0.935                 0.918       0.810
-y                          0.917–0.941                 0.891 (ŷ)                   0.910–0.953 0.813
-\tau                       0.963–0.967                 0.676–0.975                             0.900
-\mathscr{F}_{\tau_{j+1}}   0.944                                     0.000–0.859               0.616
-\mathrm{ID}_2              0.948–0.971                               0.840–0.866               0.804
-\mathbb{R}^d               0.923–0.951                               0.761–0.774               0.712
-\tau_j                     0.949–0.952   0.860–0.868   0.836–0.845   0.652–0.947               0.745
-snip \mathscr{F}           0.905–0.953                 0.946–0.969                             0.802
-snip \mathbb{R}            0.919–0.954                 0.866–0.954                             0.845
-snip x                     0.920–0.948                 0.785–0.910                 0.910       0.757
-snip \mathrm{ID}_2         0.945–0.961                               0.833–0.838               0.792
-snip \tau_j                0.944–0.951   0.829–0.844   0.821–0.822   0.677–0.958               0.729
-```
-
-To add a case: tag every occurrence of the new symbol in `page.tex`
-(untagged occurrences would be counted as distractors), add a query line in
-`queries.mjs`, run `npm test`.
-
----
-
-## Calibration and score bands
-
-On the bench (10 pt Computer Modern at 216 dpi, KaTeX templates):
-
-- exact same-symbol matches: **0.91–0.98**;
-- the same symbol with an extra script or accent: 0.76–0.95 — usually just
-  below the bare symbol, occasionally above it (`\mathscr{F}_{\tau_j}` vs
-  `\mathscr{F}`, where the script is far from the base);
-- scriptsize occurrences of a compound (`\tau_j` inside `[\tau_j, …]`):
-  **≈ 0.86** — TeX places the subscript differently in script style, so a
-  textstyle template only matches at a lowered threshold;
-- wrong glyphs: mostly < 0.85; the worst on the page is **0.900** (an italic
-  text *r* for `\tau`; "io"/"lo" letter pairs in running text for
-  `\mathrm{ID}` reach 0.886).
-
-0.90 is therefore the lowest threshold with no false positive on the bench
-page. The count of false positives grows quickly below it for simple
-templates (`\mathrm{ID}` at 0.86: 25 on one page; at 0.80: 170), and not at
-all for distinctive ones (`\mathfrak{F}`, the compounds). Parameter sweeps
-over the tolerance cap, weight shape, ink fraction, score combination,
-refinement scales and render resolution all move the worst-case margin by
-≈ ±0.01: the limit is 12–14 px glyphs at a 2 px tolerance, not a tuning.
-
----
-
 ## Known limitations
 
 - **Visual search finds visual matches.** `\mathrm{ID}` matches "ID" inside
@@ -491,8 +363,7 @@ refinement scales and render resolution all move the worst-case margin by
   compress towards 0.87 for both true and false matches; expect to lower the
   threshold and tolerate lookalikes there.
 - **Compound templates across styles.** A textstyle template does not
-  exactly match its scriptstyle occurrence (script placement differs), see
-  the `small` class above.
+  exactly match its scriptstyle occurrence (script placement differs).
 - Cross-origin PDFs without CORS headers taint the canvas and cannot be read
   (browser security); local files always work.
 - Black ink on white pages only; scanned documents are out of scope.
@@ -506,23 +377,6 @@ refinement scales and render resolution all move the worst-case margin by
   `MAX_SNIP_PIXELS` are refused, and the preview
   clamps sizes and macro expansion (`KATEX_MAX_SIZE`, `KATEX_MAX_EXPAND`), so
   a crafted PDF or a typo cannot make the tab allocate gigabytes.
-- **Rotated pages.** Pages are indexed as PDF.js renders them with their
-  own `/Rotate`, so landscape pages and `pdflscape` pages work as they are.
-  The viewer's own rotation (Rotate clockwise) is applied to the highlights
-  and the scroll target (`rotateBox` in `overlay.js`). Content typeset
-  sideways on the page (`lscape`, `\rotatebox`, a turned table) is found
-  through the text layer: while a page is indexed, the share of its text
-  running in each quarter turn is read (`textQuarterTurns` in
-  `bookindex.js`, ≈ 5–12 ms a page), and a turn with at least
-  `ROTATED_TEXT_MIN_CHARS` characters and `ROTATED_TEXT_MIN_SHARE` of the
-  page is also searched with the template turned that way
-  (`Matching.rotateTemplate`; a quarter turn of a binary image is exact, so
-  the scores are those of upright matches). Limits: a scanned page has no
-  text layer and is searched upright only; text at other angles is not
-  searched; the attached-script rule assumes upright text, so a sideways
-  `\mathbb{R}^d` may rank like a bare one; Look up in index reads only
-  upright index lines. `test/smoke-rotation.mjs` covers all of this on
-  `test/fixtures/rotated.tex`.
 - Multi-line display math (fractions, stacked operators) is matched only as
   far as its pieces are single components; a fraction bar over a searched
   letter is deliberately ignored, a stacked limit is not.
@@ -530,45 +384,3 @@ refinement scales and render resolution all move the worst-case margin by
   an indexed document, with the progress line updating between pages. A Web
   Worker port is straightforward (the matcher is DOM-free) but not done.
 
----
-
-## Design history
-
-**v0.1 (`legacy/ARCHITECTURE-v0.1.md`).** Projection-profile segmentation into word boxes
-(row-then-column, after a global-column first attempt collapsed every page
-into one box) + aspect-ratio gate + IoU of dilated binaries. Failures:
-symbol+punctuation merged into one box depending on kerning, so the box did
-not coincide with the symbol; sub-pixel rasterisation jitter; an absolute
-aspect tolerance too loose for compact glyphs; IoU losing power on small
-boxes, worsened by the symmetric dilation. `SIMILARITY_THRESHOLD` had to be
-lowered to 0.45.
-
-**Sliding-window + chamfer attempt.** Boxes reinterpreted as anchor regions
-with a height-normalised template slid across them, multi-scale
-(`HEIGHT_SCALES`), and a truncated symmetric chamfer scorer. It regressed:
-the forward term read a region-level distance transform (score floor ≈ 0.5),
-the one-sided width gate plus max-over-positions removed anchor rejection,
-and `MIN_GAP_WIDTH_PX` 3→5 merged whole text lines. The README of that phase
-(`legacy/README-additions-sliding-window.md`) was never fully synced with
-the code.
-
-**v1.0 (this version).** The segmentation problem was removed rather than
-solved: connected components are intrinsic to glyphs, so scale and position
-come from the glyph itself; the chamfer score reads a page-level transform
-for the forward term and a template-local one for the reverse term;
-attached scripts and accents are explicit; a Node bench with pdflatex ground
-truth replaced eyeballing. Things learned on the way, all reproducible with
-the bench: the cluster anchor is essential (a KaTeX `\mathscr{F}` is two
-components, the CM one is one); the script rule must require *vertical
-overlap* with the base or it grabs glyphs from the next line; the accent
-rule must cap height at 0.4 h or a subscript's descender from the line above
-counts as an accent; render scale 4 and finer distance metrics do not help;
-gating logic dominates matching quality, so gate loosely and let the scorer
-decide.
-
-**Not done, in likely order of value:** Web Worker for the scan; a learned
-glyph comparator (small siamese CNN on KaTeX-vs-pdflatex renders, in-browser
-via ONNX Runtime Web with `'wasm-unsafe-eval'` in the CSP) to separate the
-12–14 px lookalikes and the prefix/superset cases that no local geometric
-rule can; persistence of the index across reloads (IndexedDB would do it
-without a permission, at the cost of disk space per book).

@@ -328,7 +328,7 @@ export const Config = {
   INDEX_MAX_GAP: 0.04,
   // At most this many page references are read per index entry.
   INDEX_MAX_REFS: 5,
-  // Sideways text (DESIGN.md, "Known limitations"): a page is also searched with the
+  // Sideways text (DESIGN.md, "How it works", rotated pages): a page is also searched with the
   // template turned by a quarter turn when its text layer has at least this
   // many characters, and this share of its characters, turned that way (a
   // landscape table typeset sideways). Hand-picked: rotated axis labels of

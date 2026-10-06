@@ -114,7 +114,7 @@ function prepareTemplate(binary, w, h) {
 
 /**
  * The template turned by `quarterTurns` × 90° counterclockwise, for pages
- * whose text runs sideways (DESIGN.md, "Known limitations"). A quarter turn of a
+ * whose text runs sideways (DESIGN.md, "How it works", rotated pages). A quarter turn of a
  * binary image is exact, so the scores are those of an upright match.
  * Cached on the template.
  * @param {Template} template

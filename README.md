@@ -17,8 +17,10 @@ It runs entirely in your browser: no server, no network access, nothing
 leaves your computer, and the extension asks for no permissions. The only
 thing it stores is its two memory settings.
 
-Status: version 1.0, working and tested. It is not yet in any extension
-store.
+Status: version 1.0, working and tested. For now it is installed in
+Developer mode (see Install below). The author is working on publishing it
+on the Microsoft Edge Add-ons store, so that Edge users can install it from
+there without turning on Developer mode.
 
 ## Quick start
 
@@ -67,8 +69,7 @@ and practice text to try the search on.
 
 ## More
 
-- [DESIGN.md](DESIGN.md): how it works, configuration, the test bench,
-  calibration, known limitations and design history.
+- [DESIGN.md](DESIGN.md): how it works, configuration and known limitations.
 - [REBUILD-WITH-AI.md](REBUILD-WITH-AI.md): prompts for rebuilding
   MathSearch yourself with an AI coding assistant.
 - [PRIVACY.md](PRIVACY.md): no data is collected; no network access.
