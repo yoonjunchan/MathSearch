@@ -19,7 +19,7 @@ thing it stores is its two memory settings.
 
 Status: version 1.0, working and tested. For now it is installed in
 Developer mode (see Install below). The author is working on publishing it
-on the Microsoft Edge Add-ons store, so that Edge users can install it from
+on the Chrome Web Store, so that Chrome and Edge users can install it from
 there without turning on Developer mode.
 
 ## Quick start
