@@ -17,16 +17,19 @@ It runs entirely in your browser: no server, no network access, nothing
 leaves your computer, and the extension asks for no permissions. The only
 thing it stores is its two memory settings.
 
-Status: version 1.0, working and tested. For now it is installed in
-Developer mode (see Install below). The author is working on publishing it
-on the Chrome Web Store, so that Chrome and Edge users can install it from
-there without turning on Developer mode.
+Status: version 1.0, working and tested, and available on the
+[Chrome Web Store](https://chromewebstore.google.com/detail/ldfefnlfjjliildnomknkplglgfkkhcd) for Chrome and Edge.
 
 ## Quick start
 
 ### Install
 
-**Ready-made:** download `mathsearch-<version>.zip` from the
+**From the Chrome Web Store** (recommended): open
+[MathSearch on the Chrome Web Store](https://chromewebstore.google.com/detail/ldfefnlfjjliildnomknkplglgfkkhcd) and click **Add to Chrome**. In
+Edge, first click **Allow extensions from other stores** when the store
+page asks. Updates then install themselves.
+
+**Ready-made zip**, for Developer mode: download `mathsearch-<version>.zip` from the
 [Releases page](https://github.com/yoonjunchan/MathSearch/releases) and unzip
 it into a folder of its own.
 
